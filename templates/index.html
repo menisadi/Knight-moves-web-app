@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Chess Knight's Distance</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        h1 {
+            font-family: "Arial Rounded MT Bold", sans-serif;
+            font-size: 24px;
+            margin-bottom: 20px;
+            /* Add some spacing between the title and the chessboard */
+        }
+
+        #chessboard {
+            width: 400px;
+            /* Adjust the width as needed */
+            height: 400px;
+            /* Adjust the height as needed */
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+
+<body>
+    <h1>Chess Knight's Distance</h1>
+    <canvas id="chessboard" width="400" height="400"></canvas>
+    <script>
+        var canvas = document.getElementById('chessboard');
+        var ctx = canvas.getContext('2d');
+        var square_size = 50; // Adjust this as needed
+
+        // Function to draw the initial chessboard
+        function drawChessboard() {
+            for (var row = 0; row < 8; row++) {
+                for (var col = 0; col < 8; col++) {
+                    var color = (row + col) % 2 === 0 ? 'white' : 'black';
+                    ctx.fillStyle = color;
+                    ctx.fillRect(col * square_size, row * square_size, square_size, square_size);
+                }
+            }
+        }
+
+        // Function to handle square clicks
+
+        function onSquareClick(event) {
+            var col = Math.floor(event.offsetX / square_size);
+            var row = Math.floor(event.offsetY / square_size);
+            $.ajax({
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ 'col': col, 'row': row }),
+                dataType: 'json',
+                url: '/square_click',
+
+                success: function (response) {
+                    if (response.error) {
+                        alert(response.error);
+                    } else {
+                        // Handle the response data appropriately≤≥
+                        if (response.reset) {
+                            // Implement code to reset the chessboard
+                            ctx.clearRect(0, 0, canvas.width, canvas.height);
+                            drawChessboard();
+                        } else if (response.distances) {
+                            // Draw distances on the chessboard
+                            ctx.clearRect(0, 0, canvas.width, canvas.height);
+                            drawChessboard(); // Redraw the chessboard
+
+                            var distances = response.distances;
+
+                            // Define colors for different distance ranges
+                            var colors = ['#FFFFFF', '#FFBBBB', '#FF9999', '#FF7777', '#FF5555', '#FF3333', '#FF1111'];
+
+                            for (var row = 0; row < 8; row++) {
+                                for (var col = 0; col < 8; col++) {
+                                    var distance = distances[7 - row][col]; // Adjust row indexing here
+                                    var color = colors[Math.min(distance, colors.length - 1)];
+
+                                    // Draw a rectangle for the square with a fill color based on distance
+                                    ctx.fillStyle = color;
+                                    ctx.fillRect(col * square_size, row * square_size, square_size, square_size);
+
+                                    // Draw the distance number in the center of the square
+                                    ctx.fillStyle = 'black';
+                                    ctx.font = '16px Arial';
+                                    ctx.textAlign = 'center';
+                                    ctx.fillText(distance.toString(), col * square_size + square_size / 2, row * square_size + square_size / 2);
+                                }
+                            }
+                        }
+                    }
+                }
+
+            });
+        }
+
+        // Attach the click event to the canvas
+        canvas.addEventListener('click', onSquareClick);
+
+        // Initial draw of the chessboard
+        drawChessboard();
+    </script>
+</body>
+
+</html>
